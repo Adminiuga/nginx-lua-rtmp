@@ -124,10 +124,11 @@ jobs:
         run: |
           echo "Image built and pushed successfully!"
           echo "Nginx version: ${{ steps.base-digest.outputs.version }}"
+          echo "Base image digest: ${{ steps.base-digest.outputs.base-digest }}"
           echo "Tags: ${{ steps.meta.outputs.tags }}"
           echo "Digest: ${{ steps.build.outputs.digest }}"
           echo "Modules: ${{ env.NGINX_MODULES }}"
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:base-${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
       
       - name: Skip build notification
         if: steps.check-exists.outputs.should_build == 'false'
