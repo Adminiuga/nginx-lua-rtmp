@@ -25,7 +25,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/nginx-lua-rtmp
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'nginx-lua-rtmp' }}
   NGINX_BASE_IMAGE: ${{ vars.NGINX_BASE_IMAGE || 'nginx:stable' }}
   NGINX_MODULES: ${{ vars.NGINX_MODULES || 'ndk lua rtmp' }}
 
@@ -79,7 +79,7 @@ jobs:
         continue-on-error: true
         run: |
           # Try to pull image with this base digest tag
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-${{ steps.base-digest.outputs.digest }} 2>/dev/null
+          docker pull ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}:base-${{ steps.base-digest.outputs.digest }} 2>/dev/null
           if [ $? -eq 0 ]; then
             echo "should_build=false" >> $GITHUB_OUTPUT
             echo "Image with base digest ${{ steps.base-digest.outputs.digest }} already exists, skipping build"
@@ -93,7 +93,7 @@ jobs:
         if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch,enable={{is_default_branch}}
             type=ref,event=tag
@@ -126,7 +126,7 @@ jobs:
           echo "Tags: ${{ steps.meta.outputs.tags }}"
           echo "Digest: ${{ steps.build.outputs.digest }}"
           echo "Modules: ${{ env.NGINX_MODULES }}"
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
+          docker run --rm ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME}}:${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
       
       - name: Skip build notification
         if: steps.check-exists.outputs.should_build == 'false'
