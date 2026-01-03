@@ -26,7 +26,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/nginx-lua-rtmp
-  NGINX_BASE_IMAGE: nginx:stable
+  NGINX_BASE_IMAGE: ${{ vars.NGINX_BASE_IMAGE || 'nginx:stable' }}
 
 jobs:
   build-and-push:
