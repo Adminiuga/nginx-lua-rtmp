@@ -4,6 +4,10 @@ on:
   # Manual trigger
   workflow_dispatch:
   
+  # Scheduled daily check for base image updates
+  schedule:
+    - cron: '0 1 * * *'  # Daily at 2 AM UTC
+  
   # Trigger when Dockerfile is updated
   push:
     paths:
@@ -11,7 +15,7 @@ on:
       - '.github/workflows/build-nginx-image.yml'
     branches:
       - main
-      - master
+      - dev
   
   # Trigger on pull requests that modify Dockerfile
   pull_request:
@@ -55,15 +59,37 @@ jobs:
         run: |
           curl -o Dockerfile https://raw.githubusercontent.com/nginx/docker-nginx/refs/heads/master/modules/Dockerfile
 
-      - name: Get NGINX version
-        id: nginx-version
+      - name: Get base image digest
+        id: base-digest
         run: |
+          # Pull the base image to get its digest
+          docker pull ${{ env.NGINX_BASE_IMAGE }}
+          DIGEST=$(docker inspect ${{ env.NGINX_BASE_IMAGE }} --format='{{index .RepoDigests 0}}' | cut -d'@' -f2 | cut -c1-12)
           NGINX_VERSION=$(docker run --rm ${{ env.NGINX_BASE_IMAGE }} nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
-          echo "NGINX_VERSION=$NGINX_VERSION" >> $GITHUB_ENV
-          echo "Detected NGINX version: $NGINX_VERSION"    
+          
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "version=$NGINX_VERSION" >> $GITHUB_OUTPUT
+          echo "Base image digest: $DIGEST"
+          echo "NGINX version: $NGINX_VERSION"
+      
+      - name: Check if digest already built
+        id: check-exists
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        run: |
+          # Try to pull image with this base digest tag
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-${{ steps.base-digest.outputs.digest }} 2>/dev/null
+          if [ $? -eq 0 ]; then
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "Image with base digest ${{ steps.base-digest.outputs.digest }} already exists, skipping build"
+          else
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Image with base digest ${{ steps.base-digest.outputs.digest }} not found, will build"
+          fi
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
+        if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -73,9 +99,11 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ steps.nginx-version.outputs.NGINX_VERSION }},enable={{is_default_branch}}
+            type=raw,value=nginx-${{ steps.base-digest.outputs.version }},enable={{is_default_branch}}
+            type=raw,value=base-${{ steps.base-digest.outputs.digest }},enable={{is_default_branch}}
       
       - name: Build and push Docker image
+        if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -91,7 +119,14 @@ jobs:
           platforms: linux/amd64,linux/arm64
       
       - name: Output image details
+        if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
         run: |
           echo "Image built and pushed successfully!"
+          echo "Nginx version: ${{ steps.base-digest.outputs.version }}"
           echo "Tags: ${{ steps.meta.outputs.tags }}"
           echo "Digest: ${{ steps.build.outputs.digest }}"
+      
+      - name: Skip build notification
+        if: steps.check-exists.outputs.should_build == 'false'
+        run: |
+          echo "Build skipped - image already exists for base digest ${{ steps.base-digest.outputs.digest }}"
