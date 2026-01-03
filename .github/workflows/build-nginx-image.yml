@@ -48,6 +48,11 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get nginx module docker file
+        id: nginx-dockerfile
+        run: |
+          curl -o Dockerfile https://raw.githubusercontent.com/nginx/docker-nginx/refs/heads/master/modules/Dockerfile
     
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -72,7 +77,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             ENABLED_MODULES=ndk lua rtmp
-            NGINX_FROM_IMAGE=nginx:mainline
+            NGINX_FROM_IMAGE=nginx:stable
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
