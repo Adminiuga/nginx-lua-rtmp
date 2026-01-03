@@ -27,6 +27,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/nginx-lua-rtmp
   NGINX_BASE_IMAGE: ${{ vars.NGINX_BASE_IMAGE || 'nginx:stable' }}
+  NGINX_MODULES: ${{ vars.NGINX_MODULES || 'ndk lua rtmp' }}
 
 jobs:
   build-and-push:
@@ -112,7 +113,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ENABLED_MODULES=ndk lua rtmp
+            ENABLED_MODULES=${{ env.NGINX_MODULES }}
             NGINX_FROM_IMAGE=${{ env.NGINX_BASE_IMAGE }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -125,6 +126,8 @@ jobs:
           echo "Nginx version: ${{ steps.base-digest.outputs.version }}"
           echo "Tags: ${{ steps.meta.outputs.tags }}"
           echo "Digest: ${{ steps.build.outputs.digest }}"
+          echo "Modules: ${{ env.NGINX_MODULES }}"
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:base-${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
       
       - name: Skip build notification
         if: steps.check-exists.outputs.should_build == 'false'
