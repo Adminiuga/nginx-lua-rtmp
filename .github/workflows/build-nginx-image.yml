@@ -70,10 +70,10 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
+            type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-,event=branch
-            type=sha,prefix=pr-,event=pr
+            type=sha
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=${{ steps.nginx-version.outputs.NGINX_VERSION }},enable={{is_default_branch}}
       
