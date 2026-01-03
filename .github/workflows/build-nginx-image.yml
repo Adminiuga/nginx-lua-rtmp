@@ -64,7 +64,7 @@ jobs:
         run: |
           # Pull the base image to get its digest
           docker pull ${{ env.NGINX_BASE_IMAGE }}
-          DIGEST=$(docker inspect ${{ env.NGINX_BASE_IMAGE }} --format='{{index .RepoDigests 0}}' | cut -d'@' -f2 | cut -c1-12)
+          DIGEST=$(docker inspect ${{ env.NGINX_BASE_IMAGE }} --format='{{index .RepoDigests 0}}' | cut -d'@' -f2 | cut -c1-15)
           NGINX_VERSION=$(docker run --rm ${{ env.NGINX_BASE_IMAGE }} nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
           
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
