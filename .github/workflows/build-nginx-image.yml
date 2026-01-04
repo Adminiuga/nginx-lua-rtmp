@@ -126,7 +126,7 @@ jobs:
           echo "Tags: ${{ steps.meta.outputs.tags }}"
           echo "Digest: ${{ steps.build.outputs.digest }}"
           echo "Modules: ${{ env.NGINX_MODULES }}"
-          docker run --rm ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME}}:${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
+          docker run --rm ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
       
       - name: Skip build notification
         if: steps.check-exists.outputs.should_build == 'false'
