@@ -102,6 +102,7 @@ jobs:
             type=raw,value=base-${{ steps.base-digest.outputs.digest }},enable={{is_default_branch}}
       
       - name: Build and push Docker image
+        id: build
         if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
         uses: docker/build-push-action@v6
         with:
