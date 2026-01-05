@@ -1,0 +1,11 @@
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+ 
+Package: libnginx-mod-http-lua
+Version: 1.28.1
+# Maintainer: Your Name <yourname@example.com>
+# Pre-Depends: <comma-separated list of packages>
+Depends: nginx
+Description: Lua module for Nginx
+ dummy package for nginx lua http module
