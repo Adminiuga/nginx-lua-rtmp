@@ -128,6 +128,12 @@ jobs:
           echo "Digest: ${{ steps.build.outputs.digest }}"
           echo "Modules: ${{ env.NGINX_MODULES }}"
           docker run --rm ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
+
+      - name: Build bouncer image
+        if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
+        uses: ./.github/workflows/build-nginx-cs-bouncer.yml
+        with:
+          base_image: ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
       
       - name: Skip build notification
         if: steps.check-exists.outputs.should_build == 'false'
