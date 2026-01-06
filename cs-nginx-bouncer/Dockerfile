@@ -7,7 +7,7 @@ COPY ./dummy-packages/* /tmp/packages/dummy/
 RUN apt-get update \
     && apt-get install -y --no-install-suggests --no-install-recommends \
                 patch make wget git devscripts debhelper dpkg-dev \
-                quilt lsb-release build-essential libxml2-utils \
+                quilt lsb-release build-essential \
                 equivs git g++ \
     && cd /tmp/packages \
     && git clone --depth 1 https://github.com/crowdsecurity/cs-nginx-bouncer.git \
@@ -22,5 +22,5 @@ FROM ${NGINX_FROM_IMAGE}
 RUN --mount=type=bind,target=/tmp/packages/,source=/tmp/packages/,from=builder \
     apt-get update \
     && apt-get install -y --no-install-suggests --no-install-recommends \
-        lua5.1 liblua5.1-0-dev luarocks /tmp/packages/*.deb \
+        gcc lua5.1 liblua5.1-0-dev luarocks /tmp/packages/*.deb \
     && rm -rf /var/lib/apt/lists/
