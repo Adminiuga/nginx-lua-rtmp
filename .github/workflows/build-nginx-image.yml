@@ -35,6 +35,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_ref: ${{ steps.build.outputs.digest }}
+      image_tag: ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}
+      should_build: ${{ steps.check-exists.outputs.should_build }}
       
     steps:
       - name: Checkout repository
@@ -129,13 +133,13 @@ jobs:
           echo "Modules: ${{ env.NGINX_MODULES }}"
           docker run --rm ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }} ls /usr/lib/nginx/modules
 
-      - name: Build bouncer image
-        if: github.event_name != 'schedule' || steps.check-exists.outputs.should_build == 'true'
-        uses: ./.github/workflows/build-nginx-cs-bouncer.yml
-        with:
-          base_image: ${{ env.REGISTRY }}/${{ steps.lower.outputs.repository_owner }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
-      
-      - name: Skip build notification
-        if: steps.check-exists.outputs.should_build == 'false'
-        run: |
-          echo "Build skipped - image already exists for base digest ${{ steps.base-digest.outputs.digest }}"
+  build-bouncer:
+    needs: build-and-push
+    if: github.event_name != 'schedule' || needs.build-and-push.outputs.should_build == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-nginx-cs-bouncer.yml
+    with:
+      base_image: ${{ needs.build-and-push.outputs.image_tag }}@${{ needs.build-and-push.outputs.image_ref }}
+    secrets: inherit
