@@ -1,0 +1,25 @@
+diff --git a/debian/rules b/debian/rules
+index 28f8a46..3b91490 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -14,8 +14,8 @@ override_dh_auto_clean:
+ override_dh_auto_test:
+ override_dh_auto_build:
+ override_dh_auto_install:
+-	mkdir -p debian/crowdsec-nginx-bouncer/usr/share/crowdsec-nginx-bouncer/
+-	cp nginx/crowdsec_nginx.conf debian/crowdsec-nginx-bouncer/usr/share/crowdsec-nginx-bouncer/
++	mkdir -p debian/crowdsec-nginx-bouncer/etc/nginx/conf.d
++	cp nginx/crowdsec_nginx.conf debian/crowdsec-nginx-bouncer/etc/nginx/conf.d
+ 
+ 	git clone -b "${LUA_BOUNCER_BRANCH}" https://github.com/crowdsecurity/lua-cs-bouncer.git
+ 
+diff --git a/nginx/crowdsec_nginx.conf b/nginx/crowdsec_nginx.conf
+index 86f5b68..daad938 100644
+--- a/nginx/crowdsec_nginx.conf
++++ b/nginx/crowdsec_nginx.conf
+@@ -1,4 +1,4 @@
+-lua_package_path '/usr/local/lua/crowdsec/?.lua;;';
++lua_package_path '/usr/lib/crowdsec/lua/?.lua;;';
+ lua_shared_dict crowdsec_cache 50m;
+ lua_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+ init_by_lua_block {
