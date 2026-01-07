@@ -8,9 +8,8 @@ COPY ./patches/* /tmp/packages/patches/
 
 RUN apt-get update \
     && apt-get install -y --no-install-suggests --no-install-recommends \
-                patch make wget git devscripts debhelper dpkg-dev \
-                quilt lsb-release build-essential \
-                equivs git g++ \
+                patch make git lsb-release build-essential \
+                equivs devscripts debhelper dpkg-dev \
     && cd /tmp/packages \
     && git clone --depth 1 https://github.com/crowdsecurity/cs-nginx-bouncer.git \
     && pushd cs-nginx-bouncer \
