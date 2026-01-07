@@ -24,6 +24,7 @@ RUN apt-get update \
        done
 
 FROM ${NGINX_FROM_IMAGE}
+COPY ./nginx/enabled-modules.d/ /etc/nginx/enabled-modules.d/
 RUN --mount=type=bind,target=/tmp/packages/,source=/tmp/packages/,from=builder \
     apt-get update \
     && apt-get install -y --no-install-suggests --no-install-recommends \
