@@ -24,9 +24,11 @@ RUN apt-get update \
        done
 
 FROM ${NGINX_FROM_IMAGE}
+COPY ./entry-point.d/* /docker-entrypoint.d/
 COPY ./nginx/enabled-modules.d/ /etc/nginx/enabled-modules.d/
 RUN --mount=type=bind,target=/tmp/packages/,source=/tmp/packages/,from=builder \
-    apt-get update \
+    sed -i '1i\include /etc/nginx/enabled-modules.d/*.conf;' /etc/nginx/nginx.conf \
+    && apt-get update \
     && apt-get install -y --no-install-suggests --no-install-recommends \
         gcc lua5.1 liblua5.1-0-dev luarocks /tmp/packages/*.deb \
     && rm -rf /var/lib/apt/lists/
